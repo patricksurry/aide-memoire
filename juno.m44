@@ -1,0 +1,389 @@
+{
+	"meta_data": {
+		"status": "PRIVATE",
+		"software": "sed 1.2"
+	},
+	"game_info": {
+		"date_begin": "1944-06-06",
+		"front": "WESTERN",
+		"type": "HISTORICAL",
+		"starting": "PLAYER1",
+		"side_player1": "AXIS",
+		"side_player2": "ALLIES",
+		"country_player1": "DE",
+		"country_player2": "US",
+		"cards_player1": 4,
+		"cards_player2": 4,
+		"victory_player1": 4,
+		"victory_player2": 4
+	},
+	"board": {
+		"type": "STANDARD",
+		"face": "BEACH",
+		"hexagons": [
+			{
+				"row": 0,
+				"col": 14,
+				"obstacle": {
+					"name": "sand",
+					"orientation": 1
+				}
+			},
+			{
+				"row": 0,
+				"col": 16,
+				"terrain": {
+					"name": "river",
+					"orientation": 2
+				}
+			},
+			{
+				"row": 0,
+				"col": 18,
+				"terrain": {
+					"name": "river",
+					"orientation": 3
+				}
+			},
+			{
+				"row": 0,
+				"col": 20,
+				"terrain": {
+					"name": "buildings"
+				},
+				"tags": [
+					{
+						"name": "medal1"
+					}
+				]
+			},
+			{
+				"row": 1,
+				"col": 7,
+				"terrain": {
+					"name": "buildings"
+				},
+				"tags": [
+					{
+						"name": "medal1"
+					}
+				]
+			},
+			{
+				"row": 1,
+				"col": 11,
+				"terrain": {
+					"name": "hills"
+				},
+				"obstacle": {
+					"name": "sand",
+					"orientation": 1
+				}
+			},
+			{
+				"row": 1,
+				"col": 13,
+				"terrain": {
+					"name": "curve",
+					"orientation": 6
+				}
+			},
+			{
+				"row": 1,
+				"col": 15,
+				"terrain": {
+					"name": "curve",
+					"orientation": 3
+				}
+			},
+			{
+				"row": 1,
+				"col": 19,
+				"terrain": {
+					"name": "curve",
+					"orientation": 4
+				}
+			},
+			{
+				"row": 2,
+				"col": 4,
+				"terrain": {
+					"name": "buildings"
+				}
+			},
+			{
+				"row": 2,
+				"col": 12,
+				"terrain": {
+					"name": "river",
+					"orientation": 2
+				},
+				"rect_terrain": {
+					"name": "bridge",
+					"orientation": 5
+				},
+				"tags": [
+					{
+						"name": "medal1"
+					}
+				]
+			},
+			{
+				"row": 2,
+				"col": 18,
+				"terrain": {
+					"name": "river",
+					"orientation": 2
+				},
+				"rect_terrain": {
+					"name": "bridge",
+					"orientation": 5
+				},
+				"tags": [
+					{
+						"name": "medal1"
+					}
+				]
+			},
+			{
+				"row": 3,
+				"col": 1,
+				"obstacle": {
+					"name": "wire",
+					"orientation": 1
+				}
+			},
+			{
+				"row": 3,
+				"col": 3,
+				"terrain": {
+					"name": "buildings"
+				}
+			},
+			{
+				"row": 3,
+				"col": 7,
+				"terrain": {
+					"name": "buildings"
+				}
+			},
+			{
+				"row": 3,
+				"col": 9,
+				"rect_terrain": {
+					"name": "bunker",
+					"orientation": 1
+				}
+			},
+			{
+				"row": 3,
+				"col": 11,
+				"terrain": {
+					"name": "curve",
+					"orientation": 1
+				}
+			},
+			{
+				"row": 3,
+				"col": 13,
+				"terrain": {
+					"name": "curve",
+					"orientation": 6
+				}
+			},
+			{
+				"row": 3,
+				"col": 15,
+				"terrain": {
+					"name": "river",
+					"orientation": 1
+				}
+			},
+			{
+				"row": 3,
+				"col": 17,
+				"terrain": {
+					"name": "curve",
+					"orientation": 3
+				}
+			},
+			{
+				"row": 3,
+				"col": 23,
+				"terrain": {
+					"name": "buildings"
+				},
+				"tags": [
+					{
+						"name": "medal1"
+					}
+				]
+			},
+			{
+				"row": 4,
+				"col": 2,
+				"obstacle": {
+					"name": "wire",
+					"orientation": 1
+				}
+			},
+			{
+				"row": 4,
+				"col": 8,
+				"obstacle": {
+					"name": "wire",
+					"orientation": 1
+				}
+			},
+			{
+				"row": 4,
+				"col": 10,
+				"obstacle": {
+					"name": "wire",
+					"orientation": 1
+				}
+			},
+			{
+				"row": 4,
+				"col": 12,
+				"terrain": {
+					"name": "riverFR",
+					"orientation": 3
+				}
+			},
+			{
+				"row": 4,
+				"col": 16,
+				"rect_terrain": {
+					"name": "bunker",
+					"orientation": 1
+				}
+			},
+			{
+				"row": 4,
+				"col": 20,
+				"obstacle": {
+					"name": "wire",
+					"orientation": 1
+				}
+			},
+			{
+				"row": 4,
+				"col": 22,
+				"obstacle": {
+					"name": "wire",
+					"orientation": 1
+				}
+			},
+			{
+				"row": 5,
+				"col": 3,
+				"obstacle": {
+					"name": "hedgehog"
+				}
+			},
+			{
+				"row": 5,
+				"col": 5,
+				"obstacle": {
+					"name": "wire",
+					"orientation": 1
+				}
+			},
+			{
+				"row": 5,
+				"col": 7,
+				"obstacle": {
+					"name": "hedgehog"
+				}
+			},
+			{
+				"row": 5,
+				"col": 11,
+				"obstacle": {
+					"name": "hedgehog"
+				}
+			},
+			{
+				"row": 5,
+				"col": 13,
+				"terrain": {
+					"name": "curve",
+					"orientation": 4
+				}
+			},
+			{
+				"row": 5,
+				"col": 15,
+				"obstacle": {
+					"name": "hedgehog"
+				}
+			},
+			{
+				"row": 5,
+				"col": 17,
+				"obstacle": {
+					"name": "wire",
+					"orientation": 1
+				}
+			},
+			{
+				"row": 5,
+				"col": 19,
+				"obstacle": {
+					"name": "hedgehog"
+				}
+			},
+			{
+				"row": 6,
+				"col": 6,
+				"obstacle": {
+					"name": "hedgehog"
+				}
+			},
+			{
+				"row": 6,
+				"col": 8,
+				"obstacle": {
+					"name": "hedgehog"
+				}
+			},
+			{
+				"row": 6,
+				"col": 12,
+				"terrain": {
+					"name": "river",
+					"orientation": 2
+				}
+			},
+			{
+				"row": 6,
+				"col": 18,
+				"obstacle": {
+					"name": "hedgehog"
+				}
+			},
+			{
+				"row": 6,
+				"col": 22,
+				"obstacle": {
+					"name": "hedgehog"
+				}
+			}
+		],
+		"labels": []
+	},
+	"packs": {
+		"terrain": 1
+	},
+	"text": {
+		"en": {
+			"name": "My title",
+			"subtitle": "\t\t\t",
+			"description": "My description",
+			"rules": "My rules",
+			"historical": "My historical background",
+			"victory": "My victory conditions"
+		}
+	}
+}

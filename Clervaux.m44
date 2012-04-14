@@ -1,0 +1,754 @@
+{
+	"meta_data": {
+		"status": "PRIVATE",
+		"software": "sed 1.2"
+	},
+	"game_info": {
+		"date_begin": "1944-06-06",
+		"front": "WESTERN",
+		"type": "HISTORICAL",
+		"starting": "PLAYER1",
+		"side_player1": "AXIS",
+		"side_player2": "ALLIES",
+		"country_player1": "DE",
+		"country_player2": "US",
+		"cards_player1": 4,
+		"cards_player2": 4,
+		"victory_player1": 4,
+		"victory_player2": 4
+	},
+	"board": {
+		"type": "STANDARD",
+		"face": "WINTER",
+		"hexagons": [
+			{
+				"row": 0,
+				"col": 4,
+				"terrain": {
+					"name": "wriver",
+					"orientation": 3
+				}
+			},
+			{
+				"row": 0,
+				"col": 6,
+				"unit": {
+					"name": "tankger"
+				}
+			},
+			{
+				"row": 0,
+				"col": 8,
+				"unit": {
+					"name": "tankger"
+				}
+			},
+			{
+				"row": 0,
+				"col": 10,
+				"unit": {
+					"name": "tankger"
+				}
+			},
+			{
+				"row": 0,
+				"col": 14,
+				"unit": {
+					"name": "tankger"
+				}
+			},
+			{
+				"row": 0,
+				"col": 16,
+				"terrain": {
+					"name": "wroad",
+					"orientation": 3
+				},
+				"unit": {
+					"name": "tankger"
+				}
+			},
+			{
+				"row": 0,
+				"col": 18,
+				"unit": {
+					"name": "tankger"
+				}
+			},
+			{
+				"row": 0,
+				"col": 20,
+				"unit": {
+					"name": "tankger"
+				}
+			},
+			{
+				"row": 1,
+				"col": 1,
+				"terrain": {
+					"name": "wforest"
+				}
+			},
+			{
+				"row": 1,
+				"col": 3,
+				"terrain": {
+					"name": "wroad",
+					"orientation": 2
+				}
+			},
+			{
+				"row": 1,
+				"col": 5,
+				"terrain": {
+					"name": "wcurved",
+					"orientation": 2
+				}
+			},
+			{
+				"row": 1,
+				"col": 7,
+				"terrain": {
+					"name": "wriver",
+					"orientation": 1
+				}
+			},
+			{
+				"row": 1,
+				"col": 9,
+				"terrain": {
+					"name": "wriver",
+					"orientation": 1
+				}
+			},
+			{
+				"row": 1,
+				"col": 11,
+				"terrain": {
+					"name": "wriver",
+					"orientation": 1
+				}
+			},
+			{
+				"row": 1,
+				"col": 13,
+				"terrain": {
+					"name": "wriver",
+					"orientation": 1
+				}
+			},
+			{
+				"row": 1,
+				"col": 15,
+				"terrain": {
+					"name": "wriver",
+					"orientation": 1
+				}
+			},
+			{
+				"row": 1,
+				"col": 17,
+				"terrain": {
+					"name": "wriver",
+					"orientation": 1
+				}
+			},
+			{
+				"row": 1,
+				"col": 19,
+				"terrain": {
+					"name": "wriver",
+					"orientation": 1
+				}
+			},
+			{
+				"row": 1,
+				"col": 21,
+				"terrain": {
+					"name": "wriver",
+					"orientation": 1
+				}
+			},
+			{
+				"row": 1,
+				"col": 23,
+				"terrain": {
+					"name": "wriver",
+					"orientation": 1
+				}
+			},
+			{
+				"row": 2,
+				"col": 2,
+				"terrain": {
+					"name": "wroad",
+					"orientation": 2
+				}
+			},
+			{
+				"row": 2,
+				"col": 4,
+				"unit": {
+					"name": "infger"
+				}
+			},
+			{
+				"row": 2,
+				"col": 6,
+				"unit": {
+					"name": "infger"
+				}
+			},
+			{
+				"row": 2,
+				"col": 8,
+				"unit": {
+					"name": "infger"
+				}
+			},
+			{
+				"row": 2,
+				"col": 10,
+				"terrain": {
+					"name": "wforest"
+				}
+			},
+			{
+				"row": 2,
+				"col": 12,
+				"unit": {
+					"name": "infger"
+				}
+			},
+			{
+				"row": 2,
+				"col": 14,
+				"unit": {
+					"name": "infger"
+				}
+			},
+			{
+				"row": 2,
+				"col": 16,
+				"unit": {
+					"name": "infger"
+				}
+			},
+			{
+				"row": 2,
+				"col": 18,
+				"terrain": {
+					"name": "wroadcurve",
+					"orientation": 4
+				},
+				"unit": {
+					"name": "infger"
+				}
+			},
+			{
+				"row": 2,
+				"col": 20,
+				"terrain": {
+					"name": "wforest"
+				},
+				"unit": {
+					"name": "infger"
+				}
+			},
+			{
+				"row": 2,
+				"col": 22,
+				"unit": {
+					"name": "infger"
+				}
+			},
+			{
+				"row": 3,
+				"col": 1,
+				"terrain": {
+					"name": "wroadFL",
+					"orientation": 1
+				}
+			},
+			{
+				"row": 3,
+				"col": 3,
+				"terrain": {
+					"name": "wroadcurve",
+					"orientation": 5
+				}
+			},
+			{
+				"row": 3,
+				"col": 5,
+				"terrain": {
+					"name": "wforest"
+				}
+			},
+			{
+				"row": 3,
+				"col": 7,
+				"terrain": {
+					"name": "wforest"
+				}
+			},
+			{
+				"row": 3,
+				"col": 11,
+				"terrain": {
+					"name": "wforest"
+				}
+			},
+			{
+				"row": 3,
+				"col": 13,
+				"terrain": {
+					"name": "wforest"
+				}
+			},
+			{
+				"row": 3,
+				"col": 15,
+				"terrain": {
+					"name": "wforest"
+				}
+			},
+			{
+				"row": 3,
+				"col": 17,
+				"terrain": {
+					"name": "wroad",
+					"orientation": 2
+				}
+			},
+			{
+				"row": 4,
+				"col": 2,
+				"terrain": {
+					"name": "wvillage"
+				},
+				"obstacle": {
+					"name": "sand",
+					"orientation": 2
+				},
+				"unit": {
+					"name": "infus"
+				},
+				"tags": [
+					{
+						"name": "medal2"
+					}
+				]
+			},
+			{
+				"row": 4,
+				"col": 4,
+				"terrain": {
+					"name": "wroadY",
+					"orientation": 1
+				},
+				"obstacle": {
+					"name": "sand",
+					"orientation": 2
+				},
+				"unit": {
+					"name": "infus"
+				}
+			},
+			{
+				"row": 4,
+				"col": 6,
+				"terrain": {
+					"name": "wroad",
+					"orientation": 1
+				}
+			},
+			{
+				"row": 4,
+				"col": 8,
+				"terrain": {
+					"name": "wroadFR",
+					"orientation": 1
+				}
+			},
+			{
+				"row": 4,
+				"col": 10,
+				"terrain": {
+					"name": "wroad",
+					"orientation": 1
+				}
+			},
+			{
+				"row": 4,
+				"col": 12,
+				"terrain": {
+					"name": "wroad",
+					"orientation": 1
+				}
+			},
+			{
+				"row": 4,
+				"col": 14,
+				"terrain": {
+					"name": "wroad",
+					"orientation": 1
+				}
+			},
+			{
+				"row": 4,
+				"col": 16,
+				"terrain": {
+					"name": "wroadY",
+					"orientation": 2
+				}
+			},
+			{
+				"row": 4,
+				"col": 18,
+				"terrain": {
+					"name": "wvillage"
+				},
+				"obstacle": {
+					"name": "sand",
+					"orientation": 2
+				},
+				"unit": {
+					"name": "infus"
+				},
+				"tags": [
+					{
+						"name": "medal2"
+					}
+				]
+			},
+			{
+				"row": 4,
+				"col": 22,
+				"terrain": {
+					"name": "wforest"
+				}
+			},
+			{
+				"row": 5,
+				"col": 3,
+				"terrain": {
+					"name": "wroad",
+					"orientation": 2
+				}
+			},
+			{
+				"row": 5,
+				"col": 5,
+				"terrain": {
+					"name": "wforest"
+				}
+			},
+			{
+				"row": 5,
+				"col": 9,
+				"terrain": {
+					"name": "wroadcurve",
+					"orientation": 4
+				}
+			},
+			{
+				"row": 5,
+				"col": 11,
+				"terrain": {
+					"name": "wvillage"
+				},
+				"obstacle": {
+					"name": "sand",
+					"orientation": 2
+				},
+				"unit": {
+					"name": "infus"
+				}
+			},
+			{
+				"row": 5,
+				"col": 17,
+				"terrain": {
+					"name": "wroadY",
+					"orientation": 1
+				}
+			},
+			{
+				"row": 5,
+				"col": 19,
+				"terrain": {
+					"name": "wroad",
+					"orientation": 1
+				}
+			},
+			{
+				"row": 5,
+				"col": 21,
+				"terrain": {
+					"name": "wroadcurve",
+					"orientation": 5
+				}
+			},
+			{
+				"row": 6,
+				"col": 2,
+				"terrain": {
+					"name": "wroad",
+					"orientation": 2
+				}
+			},
+			{
+				"row": 6,
+				"col": 6,
+				"terrain": {
+					"name": "wvillage"
+				},
+				"obstacle": {
+					"name": "sand",
+					"orientation": 2
+				},
+				"unit": {
+					"name": "infus"
+				}
+			},
+			{
+				"row": 6,
+				"col": 8,
+				"terrain": {
+					"name": "wroadcurve",
+					"orientation": 1
+				}
+			},
+			{
+				"row": 6,
+				"col": 14,
+				"terrain": {
+					"name": "wforest"
+				}
+			},
+			{
+				"row": 6,
+				"col": 16,
+				"terrain": {
+					"name": "wroad",
+					"orientation": 2
+				}
+			},
+			{
+				"row": 6,
+				"col": 20,
+				"terrain": {
+					"name": "wforest"
+				}
+			},
+			{
+				"row": 6,
+				"col": 22,
+				"terrain": {
+					"name": "wroad",
+					"orientation": 3
+				}
+			},
+			{
+				"row": 6,
+				"col": 24,
+				"terrain": {
+					"name": "wvillage"
+				},
+				"obstacle": {
+					"name": "sand",
+					"orientation": 2
+				},
+				"unit": {
+					"name": "infus"
+				}
+			},
+			{
+				"row": 7,
+				"col": 1,
+				"terrain": {
+					"name": "wroad",
+					"orientation": 2
+				}
+			},
+			{
+				"row": 7,
+				"col": 3,
+				"terrain": {
+					"name": "wforest"
+				}
+			},
+			{
+				"row": 7,
+				"col": 9,
+				"terrain": {
+					"name": "wroadcurve",
+					"orientation": 4
+				}
+			},
+			{
+				"row": 7,
+				"col": 15,
+				"terrain": {
+					"name": "wroad",
+					"orientation": 2
+				},
+				"obstacle": {
+					"name": "sand",
+					"orientation": 2
+				},
+				"unit": {
+					"name": "gunus"
+				}
+			},
+			{
+				"row": 7,
+				"col": 17,
+				"terrain": {
+					"name": "wvillage"
+				},
+				"obstacle": {
+					"name": "sand",
+					"orientation": 2
+				},
+				"unit": {
+					"name": "infus"
+				}
+			},
+			{
+				"row": 7,
+				"col": 19,
+				"terrain": {
+					"name": "wforest"
+				}
+			},
+			{
+				"row": 7,
+				"col": 21,
+				"terrain": {
+					"name": "wforest"
+				}
+			},
+			{
+				"row": 7,
+				"col": 23,
+				"terrain": {
+					"name": "wroad",
+					"orientation": 3
+				},
+				"unit": {
+					"name": "infus"
+				}
+			},
+			{
+				"row": 8,
+				"col": 0,
+				"terrain": {
+					"name": "wroad",
+					"orientation": 2
+				},
+				"tags": [
+					{
+						"name": "tag4"
+					}
+				]
+			},
+			{
+				"row": 8,
+				"col": 4,
+				"unit": {
+					"name": "tankus"
+				}
+			},
+			{
+				"row": 8,
+				"col": 6,
+				"terrain": {
+					"name": "wforest"
+				}
+			},
+			{
+				"row": 8,
+				"col": 8,
+				"terrain": {
+					"name": "wroad",
+					"orientation": 2
+				}
+			},
+			{
+				"row": 8,
+				"col": 14,
+				"terrain": {
+					"name": "wroadcurve",
+					"orientation": 1
+				},
+				"unit": {
+					"name": "tankus"
+				}
+			},
+			{
+				"row": 8,
+				"col": 16,
+				"terrain": {
+					"name": "wcastle"
+				},
+				"tags": [
+					{
+						"name": "medal2"
+					}
+				]
+			},
+			{
+				"row": 8,
+				"col": 20,
+				"unit": {
+					"name": "tankus"
+				}
+			},
+			{
+				"row": 8,
+				"col": 24,
+				"terrain": {
+					"name": "wroad",
+					"orientation": 3
+				},
+				"tags": [
+					{
+						"name": "tag4"
+					}
+				]
+			}
+		],
+		"labels": [
+			{
+				"row": 1,
+				"col": 7,
+				"text": [
+					"River Our"
+				]
+			}
+		]
+	},
+	"packs": {
+		"base": 1,
+		"terrain": 1,
+		"eastern": 1,
+		"pacific": 1,
+		"air": 1,
+		"mediterranean": 1,
+		"battlemap": 1,
+		"campaign": 1,
+		"winterwars": 1
+	},
+	"text": {
+		"en": {
+			"name": "My title",
+			"subtitle": "\t\t\t",
+			"description": "My description",
+			"rules": "My rules",
+			"historical": "My historical background",
+			"victory": "My victory conditions"
+		}
+	}
+}

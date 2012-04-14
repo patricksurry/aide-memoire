@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bgimages>
+  <item type="background">
+    <name>coast</name>
+    <icon>bg_188_217/coast.png</icon>
+  </item>
+  <item type="background">
+    <name>countryside</name>
+    <icon>bg_188_217/countryside.png</icon>
+  </item>
+  <item type="background">
+    <name>ocean</name>
+    <icon>bg_188_217/ocean.png</icon>
+  </item>
+  <item type="background">
+    <name>coast</name>
+    <icon>bg_188_217/coast.png</icon>
+  </item>
+  <item type="background">
+    <name>beach</name>
+    <icon>bg_188_217/sand.png</icon>
+  </item>
+  <item type="background">
+    <name>coast</name>
+    <icon>bg_188_217/coast.png</icon>
+  </item>
+  <item type="background">
+    <name>snow</name>
+    <icon>bg_188_217/snow.png</icon>
+  </item>
+</bgimages>

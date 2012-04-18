@@ -5,9 +5,11 @@ import math
 from types import ListType
 import os, sys
 from os import path
-from optparse import OptionParser
+from argparse import ArgumentParser
 from urllib import urlretrieve
 import operator
+
+#TODO option for M44 editor location
 
 #C:\Program Files (x86)\Memoir'44 Editor\res\en
 #<M44>/Contents/Resources/res/en/sed_data.xml
@@ -36,7 +38,7 @@ for d in app_dirs:
         sed_data_xml = fname
         break
     
-print 'sed data at',sed_data_xml
+#print 'sed data at',sed_data_xml 
 
 #sed_data_xml = "/Applications/Memoir '44 Editor.app/Contents/Resources/res/en/sed_data.xml"
 
@@ -161,11 +163,8 @@ class Board:
     line_color = (214,35,44)            # dark red
     border_color = (0,0,0)              # black
     border_width = 1                    # pixels
-    marginXY = XY(hexXY.x/2, hexXY.y/2)
+    marginXY = XY(int(hexXY.x/3), int(hexXY.y/2)) # whitespace around tiles
     
-    # actual tiles are 2.0866" (53mm) across the flats
-    DPI = 90        # = 188 / 2.0866
-
     formats = {
         'standard' : XY(13,9),      # [(4,5,4) / (3.5, 5, 3.5) ] 
         'overlord' : XY(26,9),
@@ -175,14 +174,14 @@ class Board:
     # the hexagon keys we can deal with, layered from bottom up
     drawing_layers = [
         'terrain',      # hexagonal terrain tile
-        'lines',        # pseudo-key when we draw lines between flank
+        'lines',        # pseudo-layer to draw dotted lines between flanks
         'rect_terrain', # rectangular tile, like a bunker
         'obstacle',     # 3D obstacle like sandbags
         'unit',         # unit indicator
         'tags',         # token like victory marker
         'text'          # map label
     ]
-
+        
     # return a list of background terrain names based on board format/style
     @staticmethod
     def backgroundTerrain(face, format):
@@ -222,7 +221,11 @@ class Board:
     def coords2(row, col2):
       return Board.coords(row, (col2 - (row%2))/2)
 
-    def __init__(self, m44file):
+    def __init__(self, m44file, hexWidth = 2.0866):
+        # use hexWidthto choose a particular hex width in inches
+        # actual M44 tiles are 2.0866" (53mm) across the flats
+        self.DPI = int(round(Board.hexXY.x / hexWidth))
+        
         scenario = json.load(open(m44file))
         self.info = scenario['board']
         # info is a dictionary with board details like:
@@ -249,7 +252,7 @@ class Board:
         self.cols, self.rows = Board.formats[format]
         self.rowStyles = Board.backgroundTerrain(face,format)
 
-    def getImage(self, icons):
+    def getImage(self, icons, skipLayers = []):
         # create a white empty board image with correct size and scaling (DPI)
         size = XY(    Board.hexXY.x*self.cols + 2 * Board.marginXY.x, 
                   int(Board.hexXY.y*(self.rows*3+1)/4) + 2 * Board.marginXY.y)
@@ -283,7 +286,7 @@ class Board:
                 continue
                 
             medal = medal.crop(medal.getbbox())
-            if p == '1':    # Draw top medals upside facing board edge
+            if p == '2':    # Draw top medals upside facing board edge
                 medal = ImageOps.flip(medal)
             mx,my = medal.size
             medal = medal.resize((int(mx*1.5),int(my*1.5)),Image.ANTIALIAS)
@@ -291,13 +294,16 @@ class Board:
             for col in xrange(self.cols-vp,self.cols):
                 x,y = Board.coords(0, col)
                 x,y = (x-mx/2,y-my*3/4)
-                if p == '2':
+                if p == '1':    # Medal 1 reflects to the bottom
                     x = board.size[0] - x - mx
                     y = board.size[1] - y - my
                 board.paste(medal,(x,y),medal)
    
         # now paint on the overlay elements
         for key in Board.drawing_layers:
+            if key in skipLayers:
+                continue
+                
             if key is 'lines':      # placeholder for flank lines
                 col = 0
                 while col < self.cols:
@@ -345,7 +351,9 @@ class Board:
                 if any(key not in Board.drawing_layers + ['col','row'] 
                         for key in hexagon.keys()):
                     print 'unknown key in:',hexagon.keys()
-                    
+                   
+                # TODO, look at add'l attributes for key == 'unit
+                # "name" : "tankger", "nbr_units": "2", "badge": "badge10"
                 for content in contents:
                     name = content['name']
                     image = icons.getImage(name, content.get('orientation',1))
@@ -401,58 +409,58 @@ def splitImage(image, page, overlap, output_base, DPI, ext='.png'):
             
 ########################################
 
-parser = OptionParser("Usage: %prog [options] input.m44 [output[.png]]",
-    add_help_option=False)
-parser.add_option('-?','--help', action='callback', 
-  callback=lambda o,os,v,p: parser.print_help() or sys.exit())
-parser.add_option('-p','--pagesize', type='string', default='letter',
-    help="Page size or none to skip, i.e. %s"%(', '.join(page_sizes.keys())))
-parser.add_option('-m','--margin', type='float', default=0.5,
-    help="Blank margin (inches) between image and every page edge"),
-parser.add_option('-o','--overlap', type='float', default=0.25,
-    help="Overlap between internal boundaries of image sections"),
+parser = ArgumentParser(
+    description = "Render a Memoir 44 scenario file for multi-page printing")
+parser.add_argument('scenario_file', 
+    metavar='scenario.m44', help='The M44 scenario to render')
+parser.add_argument('output_base', nargs='?',
+    metavar='outputbase.png', help='The canonical path for output image(s)')
+parser.add_argument('-w','--hexwidth', type=float, default=2.0866,
+    help="Hex width in inches across the flats")
+parser.add_argument('-p','--pagesize', default='letter',
+    help="Page size to tile image over, or none for single large image.  Supported values: %s"%(', '.join(page_sizes.keys())))
+parser.add_argument('-m','--margin', type=float, default=0.5,
+    help="Margin in inches between image and each page edge")
+parser.add_argument('-o','--overlap', type=float, default=0.25,
+    help="Overlap in inches between adjoining image sections")
+parser.add_argument('-x','--xlayers', nargs='+',
+    choices=Board.drawing_layers + ['none'], default=['obstacle','unit'],
+    help="List of drawing layers to skip")
 
-(options, args) = parser.parse_args()
+args = parser.parse_args()
 
-if len(args) < 1 or len(args) > 2:
-    if len(args) == 0:
-        print 'ERROR: No input file specified!'
-    else:
-        print 'ERROR: Too many arguments provided (%s)'%`args`
-    parser.print_help()
+if not path.exists(args.scenario_file):
+    print "ERROR: Can't find scenario file %s"%args.scenario_file
     sys.exit(-1)
 
-scenario_file = args[0]
-if not path.exists(scenario_file):
-    print "ERROR: Can't find scenario file %s"%scenario_file
+args.pagesize = args.pagesize.lower()
+if args.pagesize not in page_sizes.keys():
+    print "ERROR: Unknown page size %s"%args.pagesize
     sys.exit(-2)
 
-options.pagesize = options.pagesize.lower()
-if options.pagesize not in page_sizes.keys():
-    print "ERROR: Unknown page size %s"%options.pagesize
-    sys.exit(-2)
-
-# output to basename (excluding extension) of last argument
-output_base = path.splitext(args[-1])[0]
+# output to basename (excluding extension), based on scenario file if not given
+if not args.output_base:
+    args.output_base = args.scenario_file
+args.output_base = path.splitext(args.output_base)[0]
     
 # read the foreground hex (and other tiles and counters) image dictionaries
 icons = ArtLibrary([sed_data_xml, bg_data_xml])
 
-board = Board(scenario_file)
-image = board.getImage(icons)
+board = Board(args.scenario_file, hexWidth=args.hexwidth)
+image = board.getImage(icons, skipLayers=args.xlayers)
 saveDPI = (board.DPI, board.DPI)
 
-page_inches = page_sizes[options.pagesize]
+page_inches = page_sizes[args.pagesize]
 
 if not page_inches:     # just save full size image
-    image.save(output_base + '.png', dpi=(board.DPI,board.DPI))
+    image.save(args.output_base + '.png', dpi=(board.DPI,board.DPI))
 else:
 
-    margin_size = int(options.margin * board.DPI)
-    overlap_size = int(options.overlap * board.DPI)
+    margin_size = int(args.margin * board.DPI)
+    overlap_size = int(args.overlap * board.DPI)
     
     eff_size = XY(int(page_inches.x * board.DPI - 2*margin_size), 
                   int(page_inches.y * board.DPI - 2*margin_size))
     
-    splitImage(image, eff_size, overlap_size, output_base, board.DPI)
+    splitImage(image, eff_size, overlap_size, args.output_base, board.DPI)
     

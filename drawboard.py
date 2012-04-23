@@ -306,7 +306,7 @@ class Board:
                            
                        # Find starting point of dashed flank line
                        (x,y1) = Board.coords(0,col)
-                       x -= Board.dash_width / 2
+                       x -= Board.dash_width / 2 - 2
                        y1 += Board.hexXY.y/4
                        # Find ending point
                        y2 = Board.coords(self.rows,0).y

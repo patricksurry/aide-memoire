@@ -497,7 +497,7 @@ else:
     margin_size = int(args.margin * board.DPI)
     overlap_size = int(args.overlap * board.DPI)
     
-    eff_size = page_inches * board.DPI - 2*margin_size
+    eff_size = (page_inches * board.DPI - XY(1,1)*2*margin_size).ints()
     
     splitImage(image, eff_size, overlap_size, args.output_base, board.DPI)
     

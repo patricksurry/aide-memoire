@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bgimages>
+  <item type='outline'>
+    <name>outline</name>
+    <icon>bg_188_217/outline.png</icon>
+  </item>
   <item type="background">
     <name>coast</name>
     <icon>bg_188_217/coast.png</icon>
@@ -27,5 +31,10 @@
   <item type="background">
     <name>snow</name>
     <icon>bg_188_217/snow.png</icon>
+  </item>
+  <item type="nunits">
+    <name>nbr_units</name>
+    <icon>bg_188_217/numtag1.png</icon>
+    <nbrOrientation>9</nbrOrientation>    
   </item>
 </bgimages>

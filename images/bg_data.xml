@@ -25,6 +25,10 @@
     <icon>bg_188_217/sand.png</icon>
   </item>
   <item type="background">
+    <name>desert</name>
+    <icon>bg_188_217/sand.png</icon>
+  </item>  
+  <item type="background">
     <name>coast</name>
     <icon>bg_188_217/coast.png</icon>
   </item>

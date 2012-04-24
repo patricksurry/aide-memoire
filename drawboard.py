@@ -132,7 +132,7 @@ class Board:
     formats = {
         'standard' : XY(13,9),      # [(4,5,4) / (3.5, 5, 3.5) ] 
         'overlord' : XY(26,9),
-        'breakthrough' : XY(13,17)
+        'brkthru'  : XY(13,17)
     }
     
     # the hexagon keys we can deal with, layered from bottom up
@@ -154,18 +154,18 @@ class Board:
             'countryside' : [['countryside']],
             'winter' :      [['snow']],
             'beach' :       [['countryside'],['beach'],['coast'],['ocean']],
-            'desert' :      [['sand']]
+            'desert' :      [['desert']]
             }   
                  
         names = faces[face]
         
         if face == 'beach':
-            if format is 'overlord':
+            if format == 'brkthru':
                 repeat = (11,3,1,2)
             else:
                 repeat = (4,3,1,1)
         else:
-            if format is 'overlord':
+            if format == 'brkthru':
                 repeat = (17,)
             else:
                 repeat = (9,)
@@ -229,10 +229,6 @@ class Board:
             print "Couldn't open Verdana TTF, using (ugly) system default"
             font = ImageFont.load_default()
             
-        # label the scenario
-        canvas.text(Board.marginXY.doti( (1/2., 1/3.) ),
-            self.text['name'], fill = 'black', font=font)
-        
         # paint the board background
         outline = icons.getImage('outline')
         for row in xrange(self.rows):
@@ -290,7 +286,11 @@ class Board:
                 if p == '2':    # Position bottom medals by reflection
                     xy = - xy - mxy + board.size
                 board.paste(medal,tuple(xy),medal)
-   
+
+        # label the scenario
+        canvas.text(Board.marginXY.doti( (1/2., 1/3.) ),
+            self.text['name'], fill = 'black', font=font)
+        
         # now paint on the overlay elements
         for key in Board.drawing_layers:
             if key in skipLayers:
@@ -340,7 +340,7 @@ class Board:
                     for (i,content) in enumerate(contents):
                         wh = XY(*canvas.textsize(content, font=font))
                         pos = xy + Board.hexXY.doti( (1/2., 3/4.) ) \
-                            - wh.doti( (1/2., 1.1*(i - len(contents)/2)) )
+                            - wh.doti( (1/2., 1.1*(len(contents)/2. - i)) )
                         canvas.text(pos, content, fill="black", font=font)
                         
                     continue            # on to next hex

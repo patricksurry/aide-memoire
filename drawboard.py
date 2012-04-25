@@ -5,7 +5,7 @@ import math
 from types import ListType
 import os, sys
 from os import path
-from argparse import ArgumentParser
+from argparse import ArgumentParser, ArgumentTypeError
 from urllib import urlretrieve
 import operator
 from xy import XY
@@ -23,7 +23,6 @@ else:
     
 base_url = 'http://static.daysofwonder.com/memoir44/sed_images/'
 
-
 page_sizes = {
     'none': None,
     'a0' : XY(33.11, 46.81),
@@ -37,6 +36,27 @@ page_sizes = {
     'tabloid': XY(17,11),
     '11x17'  : XY(11,17)
 }
+
+def findSedData(folders):
+    for d in folders:
+        # Mac install is at /path/appname.app/Contents/Resources/...
+        if not sys.platform.startswith('win'):
+            d = path.splitext(d)[0] + '.app'    # ensure .app terminated
+            d = path.join(d, 'Contents', 'Resources')
+        
+        fname = path.join(d, 'res', 'en', 'sed_data.xml')
+        if path.exists(fname):
+            return fname
+    
+    return None
+
+def getImageDir():
+    base_dir = path.dirname(__file__)   # script directory
+    return path.join(base_dir,'images')   # where we'll cache all images 
+    
+def findBgData():
+    fname = path.join(getImageDir(),'bg_data.xml')
+    return fname
 
 # represents the artwork for a tile, tag, unit etc that might be displayed
 # in a hex.  Lazily loads images on request from disk with URL fallback
@@ -61,7 +81,7 @@ class Artwork:
             self.base = self.base[:-1]
             
     # request for a particular bitmap of this art
-    def getImage(self,orientation = 1):
+    def getImage(self, imageDir, imageURL, orientation = 1):
         if not orientation: orientation = 1
         
         # check if we've already loaded it
@@ -69,10 +89,10 @@ class Artwork:
             self.images[orientation] = None # assume the worst
             
             relpath = self.getRelativePath(orientation)
-            fname = path.join(image_dir, relpath)
+            fname = path.join(imageDir, relpath)
             # do we have a file?
             if not path.exists(fname):
-                url = base_url + relpath
+                url = imageURL + relpath
                 print "Retrieving",fname
                 if not path.exists(path.dirname(fname)):
                     os.makedirs(path.dirname(fname))
@@ -98,8 +118,10 @@ class Artwork:
             return self.base + self.ext
 
 class ArtLibrary:
-    def __init__(self, xml_files):
+    def __init__(self, xml_files, imageDir, imageURL):
         self.artworks = {}
+        self.imageDir = imageDir
+        self.imageURL = imageURL
         
         for xml_file in xml_files:
             xml = ElementTree(file=xml_file)
@@ -114,7 +136,7 @@ class ArtLibrary:
         if not self.artworks.has_key(name):
             return None
         
-        return self.artworks[name].getImage(orientation)
+        return self.artworks[name].getImage(self.imageDir, self.imageURL, orientation)
     
 class Board:
     hexXY = XY(188,217)                 # size of tile images in pixels
@@ -151,7 +173,7 @@ class Board:
     @staticmethod
     def backgroundTerrain(face, format):
         faces = {
-            'countryside' : [['countryside']],
+            'country' :     [['countryside']],
             'winter' :      [['snow']],
             'beach' :       [['countryside'],['beach'],['coast'],['ocean']],
             'desert' :      [['desert']]
@@ -216,7 +238,7 @@ class Board:
         self.cols, self.rows = Board.formats[format]
         self.rowStyles = Board.backgroundTerrain(face,format)
 
-    def getImage(self, icons, skipLayers = []):
+    def render(self, icons, skipLayers = []):
         # create a white empty board image with correct size and scaling (DPI)
         size = Board.marginXY * 2 + \
             Board.hexXY.doti( (self.cols, (self.rows*3+1)/4.) )
@@ -373,10 +395,23 @@ class Board:
                         if image:
                             board.paste(image, tuple(xy), image)
                   
-        board = ImageOps.expand(
+        self.image = ImageOps.expand(
             board, border=Board.border_width, fill=Board.border_color)
         
-        return board
+    def save(self, basename, page_inches, margin_inches, overlap_inches):        
+        
+        if not page_inches:     # just save full size image
+            self.image.save(basename + '.png', dpi=(self.DPI,self.DPI))
+        else:
+            # create the split up images
+            margin_size = int(margin_inches * self.DPI)
+            overlap_size = int(overlap_inches * self.DPI)
+            
+            eff_size = (page_inches * self.DPI - XY(1,1)*2*margin_size).ints()
+            
+            saveSplitImages(self.image, eff_size, overlap_size, 
+                basename, self.DPI, '.png')
+
         
 # divide an overall dimension into interval length chunks with given overlap
 # between internal intervals
@@ -386,118 +421,123 @@ def subdivide(overall, interval, overlap):
         xs.append(xs[-1] + interval - overlap)
     return xs
 
-def splitImage(image, page, overlap, output_base, DPI, ext='.png'):
+def saveSplitImages(image, page, overlap, output_base, DPI, ext='.png'):
     size = XY(*image.size)
     
     # Try tiling both portrait and landscape modes
     tiling1 = XY( 
         subdivide(size.x, page.x, overlap),
         subdivide(size.y, page.y, overlap))
-    pages1 = len(tiling1.x) * len(tiling1.y)
+    pages1 = map(len, tiling1)
     
     tiling2 = XY(
         subdivide(size.x, page.y, overlap),
         subdivide(size.y, page.x, overlap))
-    pages2 = len(tiling2.x) * len(tiling2.y)    
+    pages2 = map(len, tiling2)
     
-    if pages1 < pages2:
-        print "Using standard (portrait) tiling (%d vs %d pages)"%(pages1, pages2)
+    n1 = pages1[0]*pages1[1]
+    n2 = pages2[0]*pages2[1]
+    if n1 < n2:
+        print "Using standard (portrait) tiling on %d pages (%dx%d vs %dx%d)"%\
+            tuple([n1] + pages1 + pages2)
         tiling = tiling1
     else:
-        print "Using rotated (landscape) tiling (%d vs %d pages)"%(pages2, pages1)
+        print "Using rotated (landscape) tiling on %d pages (%dx%d vs %dx%d)"%\
+            tuple([n2] + pages2 + pages1)
         tiling = tiling2
         page = page.swap() 
     
     for i,x in enumerate(map(int,tiling.x)):
         for j,y in enumerate(map(int,tiling.y)):
             tile = image.crop(
-              (x,y, min(size.x, x+eff_size.x),min(size.y, y+eff_size.y)))
+              (x,y, min(size.x, x+page.x),min(size.y, y+page.y)))
             tile.load()     # force a non-destructive copy
             tile.save(output_base + '%02d%02d'%(i,j) + ext, dpi=(DPI,DPI))
+    
+def parseArgs(arglist = None):
+    
+    def choiceList(choices = None):
+        def checkList(value):
+            values = value.split(',')
+            for value in values:
+                if value not in choices:
+                    raise ArgumentTypeError( 
+                        'xxinvalid choice: %s (choose from %s)'%(
+                            value, ', '.join(choices)))
             
+            return values
+        return checkList
+                
+    parser = ArgumentParser(
+        description = "Render a Memoir 44 scenario file for multi-page printing")
+    parser.add_argument('scenario_file', 
+        metavar='scenario.m44', help='The M44 scenario to render')
+    parser.add_argument('output_base', nargs='?',
+        metavar='outputbase.png', help='The canonical path for output image(s)')
+    parser.add_argument('-a','--appdir', default=None,
+        help='Pathname of the Memoir 44 Editor folder')
+    parser.add_argument('-w','--hexwidth', type=float, default=2.0866,
+        help="Hex width in inches across the flats")
+    parser.add_argument('-p','--pagesize', default='letter',
+        help="Page size to tile image over, or none for single large image.  Supported values: %s"%(', '.join(page_sizes.keys())))
+    parser.add_argument('-m','--margin', type=float, default=0.5,
+        help="Margin in inches between image and each page edge")
+    parser.add_argument('-o','--overlap', type=float, default=0.25,
+        help="Overlap in inches between adjoining image sections")
+    layer_opts = Board.drawing_layers + ['none']
+    parser.add_argument('-x','--xlayers', 
+        type=choiceList(choices = layer_opts),
+        metavar=','.join(layer_opts),
+        default=['obstacle','unit'],
+        help="Comma-separated list of drawing layers to skip")
+    
+    if arglist:
+        return parser.parse_args(arglist)
+    else:
+        return parser.parse_args()
+    
 ########################################
 
-parser = ArgumentParser(
-    description = "Render a Memoir 44 scenario file for multi-page printing")
-parser.add_argument('scenario_file', 
-    metavar='scenario.m44', help='The M44 scenario to render')
-parser.add_argument('output_base', nargs='?',
-    metavar='outputbase.png', help='The canonical path for output image(s)')
-parser.add_argument('-a','--appdir', default=None,
-    help='Pathname of the Memoir 44 Editor folder')
-parser.add_argument('-w','--hexwidth', type=float, default=2.0866,
-    help="Hex width in inches across the flats")
-parser.add_argument('-p','--pagesize', default='letter',
-    help="Page size to tile image over, or none for single large image.  Supported values: %s"%(', '.join(page_sizes.keys())))
-parser.add_argument('-m','--margin', type=float, default=0.5,
-    help="Margin in inches between image and each page edge")
-parser.add_argument('-o','--overlap', type=float, default=0.25,
-    help="Overlap in inches between adjoining image sections")
-parser.add_argument('-x','--xlayers', nargs='+',
-    choices=Board.drawing_layers + ['none'], default=['obstacle','unit'],
-    help="List of drawing layers to skip")
+if __name__ == "__main__":
+    args = parseArgs()
+    
+    if args.appdir:
+        if not path.exists(args.appdir) and not path.exists(args.appdir + '.app'):
+            print "Can't find specified appdir:",args.appdir
+        else:
+            if path.isfile(args.appdir):
+                args.appdir = path.dirname(args.appdir)
+            app_dirs = [args.appdir] + app_dirs
+          
+    sed_data_xml = findSedData(app_dirs)
+    if not sed_data_xml:
+        print "Can't find Memoir '44 Editor resource data, sorry"
+        sys.exit(-1)
+    
+    bg_data_xml = findBgData()
 
-args = parser.parse_args()
-
-if args.appdir:
-    if not path.exists(args.appdir) and not path.exists(args.appdir + '.app'):
-        print "Can't find specified appdir:",args.appdir
-    else:
-        if path.isfile(args.appdir):
-            args.appdir = path.dirname(args.appdir)
-        app_dirs = [args.appdir] + app_dirs
+    if not path.exists(args.scenario_file):
+        print "ERROR: Can't find scenario file %s"%args.scenario_file
+        sys.exit(-1)
         
-sed_data_xml = None
-for d in app_dirs:
-    # Mac install is at /path/appname.app/Contents/Resources/...
-    if not sys.platform.startswith('win'):
-        d = path.splitext(d)[0] + '.app'    # ensure .app terminated
-        d = path.join(d, 'Contents', 'Resources')
+    args.pagesize = args.pagesize.lower()
+    if args.pagesize not in page_sizes.keys():
+        print "ERROR: Unknown page size %s"%args.pagesize
+        sys.exit(-2)
     
-    fname = path.join(d, 'res', 'en', 'sed_data.xml')
-    if path.exists(fname):
-        sed_data_xml = fname
-        break
+    # output to basename (excluding extension), based on scenario file if not given
+    if not args.output_base:
+        args.output_base = args.scenario_file
+    args.output_base = path.splitext(args.output_base)[0]
+        
+    # read the foreground hex (and other tiles and counters) image dictionaries
+    icons = ArtLibrary([sed_data_xml, bg_data_xml], getImageDir(), base_url)
 
-if not sed_data_xml:
-    print "Can't find Memoir '44 Editor resource data, sorry"
-    sys.exit(-1)
-
-base_dir = path.dirname(__file__)   # script directory
-image_dir = path.join(base_dir,'images')   # where we'll cache all images
-bg_data_xml = path.join(image_dir,'bg_data.xml')
-
-if not path.exists(args.scenario_file):
-    print "ERROR: Can't find scenario file %s"%args.scenario_file
-    sys.exit(-1)
-
-args.pagesize = args.pagesize.lower()
-if args.pagesize not in page_sizes.keys():
-    print "ERROR: Unknown page size %s"%args.pagesize
-    sys.exit(-2)
-
-# output to basename (excluding extension), based on scenario file if not given
-if not args.output_base:
-    args.output_base = args.scenario_file
-args.output_base = path.splitext(args.output_base)[0]
-    
-# read the foreground hex (and other tiles and counters) image dictionaries
-icons = ArtLibrary([sed_data_xml, bg_data_xml])
-
-board = Board(args.scenario_file, hexWidth=args.hexwidth)
-image = board.getImage(icons, skipLayers=args.xlayers)
-saveDPI = (board.DPI, board.DPI)
-
-page_inches = page_sizes[args.pagesize]
-
-if not page_inches:     # just save full size image
-    image.save(args.output_base + '.png', dpi=(board.DPI,board.DPI))
-else:
-    # create the split up images
-    margin_size = int(args.margin * board.DPI)
-    overlap_size = int(args.overlap * board.DPI)
-    
-    eff_size = (page_inches * board.DPI - XY(1,1)*2*margin_size).ints()
-    
-    splitImage(image, eff_size, overlap_size, args.output_base, board.DPI)
-    
+    # create the board
+    board = Board(args.scenario_file, hexWidth=args.hexwidth)
+    # render the image
+    board.render(icons, skipLayers=args.xlayers)
+    # save the tiled versions
+    board.save(args.output_base,
+        page_sizes[args.pagesize], args.margin, args.overlap)
+            

@@ -148,13 +148,13 @@ class Board:
     border_width = 1                    # pixels
     marginXY = hexXY.doti((1/3., 1/2.)) # whitespace around tiles
     dash_color = (214,35,44)            # dark red
-    dash_length = (36,9)                # black/white length
+    dash_length = (36,9)                # black/white length in pixels
     dash_width = 7                      # pixels
     
     formats = {
-        'standard' : XY(13,9),      # [(4,5,4) / (3.5, 5, 3.5) ] 
-        'overlord' : XY(26,9),
-        'brkthru'  : XY(13,17)
+        'standard' : XY(13,9),      # 2570 x 1737 px @ 90DPI = 28.6" x 19.3"
+        'overlord' : XY(26,9),      # 5014 x 1737 px @ 90DPI = 55.7" x 19.3"
+        'brkthru'  : XY(13,17)      # 2570 x 3039 px @ 90DPI = 28.6" x 33.8"
     }
     
     # the hexagon keys we can deal with, layered from bottom up
@@ -167,7 +167,6 @@ class Board:
         'tags',         # token like victory marker
         'text'          # map label
     ]
-        
         
     # return a list of background terrain names based on board format/style
     @staticmethod
@@ -193,7 +192,6 @@ class Board:
                 repeat = (9,)
     
         return sum(map(operator.mul, names, repeat),[])
-
             
     # coordinates - we use a system where each row and column counts 0,1,2,...
     # with top right starting from 0,0
@@ -421,30 +419,33 @@ def subdivide(overall, interval, overlap):
         xs.append(xs[-1] + interval - overlap)
     return xs
 
-def saveSplitImages(image, page, overlap, output_base, DPI, ext='.png'):
+def saveSplitImages(image, page, overlap, output_base, DPI, ext='.png',
+    register_marks = True):
     size = XY(*image.size)
     
     # Try tiling both portrait and landscape modes
     tiling1 = XY( 
         subdivide(size.x, page.x, overlap),
         subdivide(size.y, page.y, overlap))
-    pages1 = map(len, tiling1)
+    pages1 = XY(*map(len, tiling1))
     
     tiling2 = XY(
         subdivide(size.x, page.y, overlap),
         subdivide(size.y, page.x, overlap))
-    pages2 = map(len, tiling2)
+    pages2 = XY(*map(len, tiling2))
     
-    n1 = pages1[0]*pages1[1]
-    n2 = pages2[0]*pages2[1]
+    n1 = pages1.x*pages1.y
+    n2 = pages2.x*pages2.y
     if n1 < n2:
-        print "Using standard (portrait) tiling on %d pages (%dx%d vs %dx%d)"%\
-            tuple([n1] + pages1 + pages2)
+        print "Using standard (portrait) tiling on %d pages (%dx%d vs %dx%d)"%(
+            n1,pages1.x,pages1.y,pages2.x,pages2.y)
         tiling = tiling1
+        pages = pages1
     else:
-        print "Using rotated (landscape) tiling on %d pages (%dx%d vs %dx%d)"%\
-            tuple([n2] + pages2 + pages1)
+        print "Using rotated (landscape) tiling on %d pages (%dx%d vs %dx%d)"%(
+            n2,pages2.x,pages2.y,pages1.x,pages1.y)
         tiling = tiling2
+        pages = pages2
         page = page.swap() 
     
     for i,x in enumerate(map(int,tiling.x)):
@@ -452,17 +453,45 @@ def saveSplitImages(image, page, overlap, output_base, DPI, ext='.png'):
             tile = image.crop(
               (x,y, min(size.x, x+page.x),min(size.y, y+page.y)))
             tile.load()     # force a non-destructive copy
-            tile.save(output_base + '%02d%02d'%(i,j) + ext, dpi=(DPI,DPI))
+            
+            # possibly draw register marks
+            if register_marks:
+                canvas = ImageDraw.Draw(tile)
+                xt,yt = tile.size
+                d = overlap/10
+                xo,yo = overlap/2,overlap/2
+                if i > 0 or j > 0:
+                    canvas.line((xo-d,yo,0,yo),width=1,fill='black')
+                    canvas.line((xo,yo-d,xo,0),width=1,fill='black')
+                    
+                xo,yo = overlap/2,yt-overlap/2
+                if i > 0 or j+1 < pages.y:
+                    canvas.line((xo-d,yo,0, yo),width=1,fill='black')
+                    canvas.line((xo,yo+d,xo,yt),width=1,fill='black')                        
+            
+                xo,yo = xt-overlap/2,overlap/2
+                if i+1 < pages.x or j > 0:  
+                    canvas.line((xo+d,yo,xt,yo),width=1,fill='black')
+                    canvas.line((xo,yo-d,xo,0 ),width=1,fill='black')
+                    
+                xo,yo = xt-overlap/2,yt-overlap/2
+                if i+1 < pages.x or j+1 < pages.y:               
+                    canvas.line((xo+d,yo,xt,yo),width=1,fill='black')
+                    canvas.line((xo,yo+d,xo,yt),width=1,fill='black')
+                        
+            tile.save(output_base + '%02d%02d'%(i+1,j+1) + ext, dpi=(DPI,DPI))
     
 def parseArgs(arglist = None):
     
+    # validate argument value containing comma-separated list of strings
+    # from a fixed list
     def choiceList(choices = None):
         def checkList(value):
             values = value.split(',')
             for value in values:
                 if value not in choices:
                     raise ArgumentTypeError( 
-                        'xxinvalid choice: %s (choose from %s)'%(
+                        'invalid choice: %s (choose from %s)'%(
                             value, ', '.join(choices)))
             
             return values
@@ -478,8 +507,8 @@ def parseArgs(arglist = None):
         help='Pathname of the Memoir 44 Editor folder')
     parser.add_argument('-w','--hexwidth', type=float, default=2.0866,
         help="Hex width in inches across the flats")
-    parser.add_argument('-p','--pagesize', default='letter',
-        help="Page size to tile image over, or none for single large image.  Supported values: %s"%(', '.join(page_sizes.keys())))
+    parser.add_argument('-p','--pagesize', default='letter', choices=page_sizes.keys(),
+        help="Page size to tile image over, or none for single large image")
     parser.add_argument('-m','--margin', type=float, default=0.5,
         help="Margin in inches between image and each page edge")
     parser.add_argument('-o','--overlap', type=float, default=0.25,

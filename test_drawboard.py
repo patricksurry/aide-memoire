@@ -45,10 +45,11 @@ class BasicTests(unittest.TestCase):
 class ArgsTests(unittest.TestCase):
     def testHelp(self):
         with NoOutput():
-            self.assertRaises(SystemExit, drawboard.parseArgs, (['-h']))
+            self.assertRaises(SystemExit, drawboard.setupArgParser().parse_args,
+                (['-h']))
         
     def testShortValid(self):
-        self.assertTrue(drawboard.parseArgs([
+        self.assertTrue(drawboard.setupArgParser().parse_args([
             '-a','/some/dir',
             '-w','1.5',
             '-p','letter',
@@ -60,12 +61,12 @@ class ArgsTests(unittest.TestCase):
         ]))
         
     def testLongValid(self):
-        self.assertTrue(drawboard.parseArgs([
+        self.assertTrue(drawboard.setupArgParser().parse_args([
             'scenario.m44',
             'outputbase.png',
             '--appdir','/some/dir',
             '--hexwidth','1.5',
-            '--pagesize','letter',
+            '--page_size','letter',
             '--margin','0.5',
             '--overlap','0.25',
             '--xlayers','terrain,lines,rect_terrain,obstacle,unit,tags,text'
@@ -73,17 +74,18 @@ class ArgsTests(unittest.TestCase):
         
     def testBadPageChoice(self):
         with NoOutput():
-            self.assertRaises(SystemExit, drawboard.parseArgs,
+            self.assertRaises(SystemExit, drawboard.setupArgParser().parse_args,
                 (['-p','weirdpaper']))
             
     def testBadXLayerChoice(self):
         with NoOutput():
-            self.assertRaises(SystemExit, drawboard.parseArgs,
+            self.assertRaises(SystemExit, drawboard.setupArgParser().parse_args,
                 (['-x','terrain,weirdlayer']))
             
     def testBadArg(self):
         with NoOutput():
-            self.assertRaises(SystemExit, drawboard.parseArgs,(['--badarg']))
+            self.assertRaises(SystemExit, drawboard.setupArgParser().parse_args,
+                (['--badarg']))
     
 class CommandLineTests(unittest.TestCase):
     def runArgs(self, arglist, ok=True):
@@ -112,31 +114,15 @@ class CommandLineTests(unittest.TestCase):
     def testMissingScenario(self):
         self.runArgs(['foobar'], False)
         
-
-class ScenarioTests(unittest.TestCase):
-    def setUp(self):
-        self.icons = drawboard.ArtLibrary(
-            [ drawboard.findSedData(drawboard.app_dirs),
-              drawboard.findBgData() ],
-            drawboard.getImageDir(),
-            drawboard.base_url)
-        if not path.isdir('testimages'):
-            os.mkdir('testimages')
     
     def tryScenario(self, scenario):
-        board = drawboard.Board(scenario)
-        self.assertTrue(board)
-        board.render(self.icons, skipLayers='none')
-        outbase = path.join('testimages',
-            path.splitext(path.basename(scenario))[0])
-        board.save(outbase, drawboard.page_sizes['letter'], 0.5, 0.25)
-        board.save(outbase, None, None, None)
-        removeImages(outbase)
+        self.runArgs(['-x','none', scenario])
+        removeImages(path.splitext(scenario)[0])
         
 if __name__ == '__main__':
     # add tests for each scenario
     for i,scenario in enumerate(glob('scenarios/*.m44')):
         def doit(s): return lambda self: self.tryScenario(s)
-        setattr(ScenarioTests, 'test%d'%i, doit(scenario))
+        setattr(CommandLineTests, 'test%d'%i, doit(scenario))
 
     unittest.main()

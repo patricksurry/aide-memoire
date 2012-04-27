@@ -8,7 +8,10 @@ from os import path
 from argparse import ArgumentParser, ArgumentTypeError
 from urllib import urlretrieve
 import operator
+
+# local imports
 from xy import XY
+import splitimage
 
 # default location for M44 editor
 if sys.platform.startswith('win'):
@@ -22,20 +25,6 @@ else:
     ]
     
 base_url = 'http://static.daysofwonder.com/memoir44/sed_images/'
-
-page_sizes = {
-    'none': None,
-    'a0' : XY(33.11, 46.81),
-    'a1' : XY(23.39, 33.11),
-    'a2' : XY(16.54, 23.39),
-    'a3' : XY(11.69, 16.54),
-    'a4' : XY( 8.27, 11.69),
-    'letter' : XY(8.5,11),
-    'legal'  : XY(8.5,14),
-    'ledger' : XY(11,17),
-    'tabloid': XY(17,11),
-    '11x17'  : XY(11,17)
-}
 
 def findSedData(folders):
     for d in folders:
@@ -205,11 +194,7 @@ class Board:
     def coords2(row, col2):
       return Board.coords(row, (col2 - (row%2))/2)
 
-    def __init__(self, m44file, hexWidth = 2.0866):
-        # use hexWidthto choose a particular hex width in inches
-        # actual M44 tiles are 2.0866" (53mm) across the flats
-        self.DPI = int(round(Board.hexXY.x / hexWidth))
-        
+    def __init__(self, m44file):
         scenario = json.load(open(m44file))
         self.info = scenario['board']
         # info is a dictionary with board details like:
@@ -236,17 +221,21 @@ class Board:
         self.cols, self.rows = Board.formats[format]
         self.rowStyles = Board.backgroundTerrain(face,format)
 
-    def render(self, icons, skipLayers = []):
-        # create a white empty board image with correct size and scaling (DPI)
+    def render(self, icons, skipLayers = [], hexWidth = 2.0866):
+        # create a blank empty board image with correct size and scaling (DPI)
         size = Board.marginXY * 2 + \
             Board.hexXY.doti( (self.cols, (self.rows*3+1)/4.) )
         board = Image.new('RGB', size, Board.background_color)
         canvas = ImageDraw.Draw(board)
-              
+        
+        # use hexWidthto choose a particular hex width in inches
+        # actual M44 tiles are 2.0866" (53mm) across the flats
+        dpi = int(round(Board.hexXY.x / hexWidth))
+        
         try:
             font = ImageFont.truetype('verdanab.ttf',32)
         except:
-            print "Couldn't open Verdana TTF, using (ugly) system default"
+            print "Couldn't open VerdanaBold TTF, using (ugly) system default"
             font = ImageFont.load_default()
             
         # paint the board background
@@ -392,96 +381,14 @@ class Board:
                         image = icons.getImage('nbr_units', int(content['nbr_units']))
                         if image:
                             board.paste(image, tuple(xy), image)
-                  
-        self.image = ImageOps.expand(
+              
+        board = ImageOps.expand(
             board, border=Board.border_width, fill=Board.border_color)
+        board.info['dpi'] = (dpi,dpi)
         
-    def save(self, basename, page_inches, margin_inches, overlap_inches):        
+        return board
         
-        if not page_inches:     # just save full size image
-            self.image.save(basename + '.png', dpi=(self.DPI,self.DPI))
-        else:
-            # create the split up images
-            margin_size = int(margin_inches * self.DPI)
-            overlap_size = int(overlap_inches * self.DPI)
-            
-            eff_size = (page_inches * self.DPI - XY(1,1)*2*margin_size).ints()
-            
-            saveSplitImages(self.image, eff_size, overlap_size, 
-                basename, self.DPI, '.png')
-
-        
-# divide an overall dimension into interval length chunks with given overlap
-# between internal intervals
-def subdivide(overall, interval, overlap):
-    xs = [0.]
-    while xs[-1] + interval < overall:
-        xs.append(xs[-1] + interval - overlap)
-    return xs
-
-def saveSplitImages(image, page, overlap, output_base, DPI, ext='.png',
-    register_marks = True):
-    size = XY(*image.size)
-    
-    # Try tiling both portrait and landscape modes
-    tiling1 = XY( 
-        subdivide(size.x, page.x, overlap),
-        subdivide(size.y, page.y, overlap))
-    pages1 = XY(*map(len, tiling1))
-    
-    tiling2 = XY(
-        subdivide(size.x, page.y, overlap),
-        subdivide(size.y, page.x, overlap))
-    pages2 = XY(*map(len, tiling2))
-    
-    n1 = pages1.x*pages1.y
-    n2 = pages2.x*pages2.y
-    if n1 < n2:
-        print "Using standard (portrait) tiling on %d pages (%dx%d vs %dx%d)"%(
-            n1,pages1.x,pages1.y,pages2.x,pages2.y)
-        tiling = tiling1
-        pages = pages1
-    else:
-        print "Using rotated (landscape) tiling on %d pages (%dx%d vs %dx%d)"%(
-            n2,pages2.x,pages2.y,pages1.x,pages1.y)
-        tiling = tiling2
-        pages = pages2
-        page = page.swap() 
-    
-    for i,x in enumerate(map(int,tiling.x)):
-        for j,y in enumerate(map(int,tiling.y)):
-            tile = image.crop(
-              (x,y, min(size.x, x+page.x),min(size.y, y+page.y)))
-            tile.load()     # force a non-destructive copy
-            
-            # possibly draw register marks
-            if register_marks:
-                canvas = ImageDraw.Draw(tile)
-                xt,yt = tile.size
-                d = overlap/10
-                xo,yo = overlap/2,overlap/2
-                if i > 0 or j > 0:
-                    canvas.line((xo-d,yo,0,yo),width=1,fill='black')
-                    canvas.line((xo,yo-d,xo,0),width=1,fill='black')
-                    
-                xo,yo = overlap/2,yt-overlap/2
-                if i > 0 or j+1 < pages.y:
-                    canvas.line((xo-d,yo,0, yo),width=1,fill='black')
-                    canvas.line((xo,yo+d,xo,yt),width=1,fill='black')                        
-            
-                xo,yo = xt-overlap/2,overlap/2
-                if i+1 < pages.x or j > 0:  
-                    canvas.line((xo+d,yo,xt,yo),width=1,fill='black')
-                    canvas.line((xo,yo-d,xo,0 ),width=1,fill='black')
-                    
-                xo,yo = xt-overlap/2,yt-overlap/2
-                if i+1 < pages.x or j+1 < pages.y:               
-                    canvas.line((xo+d,yo,xt,yo),width=1,fill='black')
-                    canvas.line((xo,yo+d,xo,yt),width=1,fill='black')
-                        
-            tile.save(output_base + '%02d%02d'%(i+1,j+1) + ext, dpi=(DPI,DPI))
-    
-def parseArgs(arglist = None):
+def setupArgParser():
     
     # validate argument value containing comma-separated list of strings
     # from a fixed list
@@ -496,7 +403,7 @@ def parseArgs(arglist = None):
             
             return values
         return checkList
-                
+     
     parser = ArgumentParser(
         description = "Render a Memoir 44 scenario file for multi-page printing")
     parser.add_argument('scenario_file', 
@@ -507,12 +414,6 @@ def parseArgs(arglist = None):
         help='Pathname of the Memoir 44 Editor folder')
     parser.add_argument('-w','--hexwidth', type=float, default=2.0866,
         help="Hex width in inches across the flats")
-    parser.add_argument('-p','--pagesize', default='letter', choices=page_sizes.keys(),
-        help="Page size to tile image over, or none for single large image")
-    parser.add_argument('-m','--margin', type=float, default=0.5,
-        help="Margin in inches between image and each page edge")
-    parser.add_argument('-o','--overlap', type=float, default=0.25,
-        help="Overlap in inches between adjoining image sections")
     layer_opts = Board.drawing_layers + ['none']
     parser.add_argument('-x','--xlayers', 
         type=choiceList(choices = layer_opts),
@@ -520,19 +421,18 @@ def parseArgs(arglist = None):
         default=['obstacle','unit'],
         help="Comma-separated list of drawing layers to skip")
     
-    if arglist:
-        return parser.parse_args(arglist)
-    else:
-        return parser.parse_args()
+    parser = splitimage.setupArgParser(parser)
+    
+    return parser
     
 ########################################
 
 if __name__ == "__main__":
-    args = parseArgs()
+    args = setupArgParser().parse_args()
     
     if args.appdir:
         if not path.exists(args.appdir) and not path.exists(args.appdir + '.app'):
-            print "Can't find specified appdir:",args.appdir
+            print "WARNING: Can't find specified appdir:",args.appdir
         else:
             if path.isfile(args.appdir):
                 args.appdir = path.dirname(args.appdir)
@@ -543,16 +443,9 @@ if __name__ == "__main__":
         print "Can't find Memoir '44 Editor resource data, sorry"
         sys.exit(-1)
     
-    bg_data_xml = findBgData()
-
     if not path.exists(args.scenario_file):
         print "ERROR: Can't find scenario file %s"%args.scenario_file
         sys.exit(-1)
-        
-    args.pagesize = args.pagesize.lower()
-    if args.pagesize not in page_sizes.keys():
-        print "ERROR: Unknown page size %s"%args.pagesize
-        sys.exit(-2)
     
     # output to basename (excluding extension), based on scenario file if not given
     if not args.output_base:
@@ -560,13 +453,12 @@ if __name__ == "__main__":
     args.output_base = path.splitext(args.output_base)[0]
         
     # read the foreground hex (and other tiles and counters) image dictionaries
-    icons = ArtLibrary([sed_data_xml, bg_data_xml], getImageDir(), base_url)
+    icons = ArtLibrary([sed_data_xml, findBgData()], getImageDir(), base_url)
 
     # create the board
-    board = Board(args.scenario_file, hexWidth=args.hexwidth)
+    board = Board(args.scenario_file)
     # render the image
-    board.render(icons, skipLayers=args.xlayers)
+    image = board.render(icons, skipLayers=args.xlayers, hexWidth=args.hexwidth)
     # save the tiled versions
-    board.save(args.output_base,
-        page_sizes[args.pagesize], args.margin, args.overlap)
-            
+    splitimage.saveTiledImagesArgs(image, args.output_base, args)
+

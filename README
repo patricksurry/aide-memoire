@@ -1,4 +1,4 @@
-Patrick Surry (patrick.surry@gmail.com), 23 April 2012
+Patrick Surry (patrick.surry@gmail.com), 26 April 2012
 
 
 This Python script will render maps from Memoir '44 scenario files (.m44 format)
@@ -48,9 +48,12 @@ they will fill the target page completely (minus a border), with hex sizes
 matching the original M44 boards.
 
 If that all works, you can design and save your own .m44 scenarios, and render
-your own maps.
+your own maps. Make sure you print the images a full size (according to image 
+DPI).  On a PC I find IrfanView's thumbnail view useful: you can select all
+the images making up a map and then batch print them on selected paper at full 
+scale.  You can get IrfanView, a great free graphic viewer, at www.irfanview.com
 
-There are a number of options to control details of how the script works. 
+There are also a number of options to control details of how the script works. 
 To see a list of options just do:
 
     c:\python27\python drawboard.py --help

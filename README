@@ -8,7 +8,8 @@ You can control the map scaling (if you prefer larger or smaller hexes),
 paper size, and what details of the scenario are rendered (by default unit 
 location and movable obstacles are not displayed).
 
-It requires a copy of the Memoir '44 scenario editor, please purchase a copy. 
+It requires a copy of the Memoir '44 scenario editor, please purchase a copy 
+at http://www.daysofwonder.com/
 
 To use this script, you'll need a Mac or PC with Python and 
 the Python image library (PIL) module.  

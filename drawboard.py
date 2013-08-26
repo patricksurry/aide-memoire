@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import json
 from PIL import Image, ImageDraw, ImageOps, ImageFont
 from xml.etree.ElementTree import ElementTree

@@ -1,0 +1,6 @@
+*~
+*.zip
+Extras/
+*.pyc
+.DS_Store
+Thumbs.DB

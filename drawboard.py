@@ -9,10 +9,13 @@ from os import path
 from argparse import ArgumentParser, ArgumentTypeError
 from urllib import urlretrieve
 import operator
+import logging
 
 # local imports
 from xy import XY
 import splitimage
+
+logging.basicConfig(level=logging.WARN)
 
 # default location for M44 editor
 if sys.platform.startswith('win'):
@@ -83,19 +86,19 @@ class Artwork:
             # do we have a file?
             if not path.exists(fname):
                 url = imageURL + relpath
-                print "Retrieving",fname
+                logging.info("Retrieving %s"%fname)
                 if not path.exists(path.dirname(fname)):
                     os.makedirs(path.dirname(fname))
                 try:
                     urlretrieve(url, fname)
                 except:
-                    print "Failed to retrieve",url
+                    logging.warn("Failed to retrieve %s"%url)
                     return None
                     
             try:
                 self.images[orientation] = Image.open(fname)
             except:
-                print "Failed to open",fname
+                logging.warn("Failed to open %s"%fname)
                 return None
                     
         return self.images[orientation]
@@ -119,7 +122,7 @@ class ArtLibrary:
                 if elt.find('icon') is not None:
                     art = Artwork(elt)
                     if not art.name:
-                        print 'Skiping icon with no name',art.icon
+                        logging.warn('Skiping icon with no name %s'%art.icon)
                     self.artworks[art.name] = art  
                     
     def getImage(self,name,orientation=1):  
@@ -131,8 +134,9 @@ class ArtLibrary:
 class Board:
     hexXY = XY(188,217)                 # size of tile images in pixels
     unitTL = XY(44,80)                  # top-left corner of unit symbol
+    tagOffset = XY(39, -42)             # offset of medal tag center from hex center
     badgeSize = XY(64,64)               # size to scale unit badges to
-#    background_color = (79,105,66)      # olive green
+#    background_color = (79,105,66)     # olive green
     background_color = (255,255,255)    # white
     border_color = (0,0,0)              # black
     border_width = 1                    # pixels
@@ -236,7 +240,7 @@ class Board:
         try:
             font = ImageFont.truetype('verdanab.ttf',32)
         except:
-            print "Couldn't open VerdanaBold TTF, using (ugly) system default"
+            logging.warn("Couldn't open VerdanaBold TTF, using (ugly) system default")
             font = ImageFont.load_default()
             
         # paint the board background
@@ -245,7 +249,7 @@ class Board:
             name = self.rowStyles[row]
             image = icons.getImage(name)
             if not image:
-                print "No background image for",name
+                logging.warn("No background image for %s"%name)
                 continue
             
             for col in xrange(self.cols - (row%2)): # skip last hex on odd rows
@@ -283,7 +287,7 @@ class Board:
             
             medal = icons.getImage(medal_name)
             if not medal:
-                print "Couldn't find victory marker image",name
+                logging.warn("Couldn't find victory marker image %s"%name)
                 continue
                 
             medal = medal.crop(medal.getbbox())
@@ -301,6 +305,12 @@ class Board:
         canvas.text(Board.marginXY.doti( (1/2., 1/3.) ),
             self.text['name'], fill = 'black', font=font)
         
+        # warn about layers we won't deal with
+        for hexagon in self.info['labels'] + self.info['hexagons']:
+            if any(k not in Board.drawing_layers + ['col','row'] 
+                    for k in hexagon.keys()):
+                logging.warn('unknown key in %s'%`hexagon.keys()`)
+                    
         # now paint on the overlay elements
         for key in Board.drawing_layers:
             if key in skipLayers:
@@ -331,7 +341,7 @@ class Board:
                            
                 continue            # on to next layer
                 
-            hexagons = self.info[key is 'text' and 'labels' or 'hexagons']
+            hexagons = self.info['labels' if key is 'text' else 'hexagons']
             for hexagon in hexagons:
                 col,row = hexagon['col'],hexagon['row']
 
@@ -354,19 +364,43 @@ class Board:
                         canvas.text(pos, content, fill="black", font=font)
                         
                     continue            # on to next hex
-                    
-                if any(key not in Board.drawing_layers + ['col','row'] 
-                        for key in hexagon.keys()):
-                    print 'unknown key in:',hexagon.keys()
-                   
-                for content in contents:
+                
+                # sort contents by name to get consistent order for tags
+                contents.sort(key = lambda c: c['name'])
+                for i,content in enumerate(contents):
                     name = content['name']
                     image = icons.getImage(name, content.get('orientation',1))
                     if not image:
-                        print "(col=%d,row=%d): No image for %s"%(
-                            col,row,name)
+                        logging.warn("(col=%d, row=%d): No image for %s"%(
+                            col,row,name))
                         continue
+                    
+                    # hack to deal with multiple medal tags in a single hex
+                    # but won't work for things like 'battle stars' (named "tag1")
+                    # which is already centered in lower right
+                    if i > 0:
+                        offset = Board.tagOffset.dot(
+                            [(1,1),(-1,-1),(-1,1),(1,-1)][i%4]) - Board.tagOffset
+                        logging.debug("%s:%d:%s at (col=%d, row=%d) - offset by %s"%(
+                            key,i,name, col, row, `offset`))
+                        xy = xy + offset
+                        if key is not 'tags':
+                            logging.warn(
+"Didn't expect multiple instances of [%s] at (col=%d, row=%d)"%(key, col, row))
+                        elif i > 3:
+                            logging.warn(
+"Can't deal with more than four tags at (col=%d, row=%d)"%(col,row))
+                        
+                            
                     board.paste(image,tuple(xy),image)
+                    
+                    if i > 0: 
+                        # center of medal tag is top-right, about XY(133,66),
+                        #, i.e about +39, -42 from center of hex XY(188,217)
+                        # for subsequent ones, move them around the hex 
+                        # to bottom-left, bottom-right, top-left?
+                        logging.debug('(col=%d,row=%d), name=%s, item #=%d'%(
+                            col,row,name,i))
                     
                     # handle nbr_units and badge attributes within unit layer
                     if content.has_key('badge'):    # unit badges
@@ -433,7 +467,7 @@ if __name__ == "__main__":
     
     if args.appdir:
         if not path.exists(args.appdir) and not path.exists(args.appdir + '.app'):
-            print "WARNING: Can't find specified appdir:",args.appdir
+            logging.warn("Can't find specified appdir: %s"%args.appdir)
         else:
             if path.isfile(args.appdir):
                 args.appdir = path.dirname(args.appdir)
@@ -441,11 +475,11 @@ if __name__ == "__main__":
           
     sed_data_xml = findSedData(app_dirs)
     if not sed_data_xml:
-        print "Can't find Memoir '44 Editor resource data, sorry"
+        logging.error("Can't find Memoir '44 Editor resource data, sorry")
         sys.exit(-1)
     
     if not path.exists(args.scenario_file):
-        print "ERROR: Can't find scenario file %s"%args.scenario_file
+        logging.error("Can't find scenario file %s"%args.scenario_file)
         sys.exit(-1)
     
     # output to basename (excluding extension), based on scenario file if not given

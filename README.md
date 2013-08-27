@@ -1,6 +1,3 @@
-Patrick Surry (patrick.surry@gmail.com), 26 April 2012
-
-
 This Python script will render maps from Memoir '44 scenario files (.m44 format)
 into image files segmented for printing on whatever paper size you like.
 
@@ -72,6 +69,9 @@ You might want to try options like this:
                         which are normally skipped)
                         
                         
+Author: Patrick Surry (patrick.surry@gmail.com)
+
+
 
 
 
